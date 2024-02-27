@@ -1515,6 +1515,42 @@ namespace ReactNativeLibsodium
 
         jsiRuntime.global().setProperty(jsiRuntime, "jsi_crypto_generichash", std::move(jsi_crypto_generichash));
 
+        auto jsi_crypto_hash = jsi::Function::createFromHostFunction(
+            jsiRuntime,
+            jsi::PropNameID::forUtf8(jsiRuntime, "jsi_crypto_hash"),
+            1,
+            [](jsi::Runtime &runtime, const jsi::Value &thisValue, const jsi::Value *arguments, size_t count) -> jsi::Value
+            {
+                const std::string functionName = "crypto_hash";
+
+                std::string messageArgumentName = "message";
+                unsigned int messageArgumentPosition = 0;
+                JsiArgType messageArgType = validateIsStringOrArrayBuffer(functionName, runtime, arguments[messageArgumentPosition], messageArgumentName, true);
+
+                int result = -1;
+                std::vector<uint8_t> input;
+                size_t messageLength;
+                std::vector<uint8_t> hash(crypto_hash_BYTES);
+
+                if (messageArgType == JsiArgType::string) {
+                    std::string messageString = arguments[messageArgumentPosition].asString(runtime).utf8(runtime);
+                    input = std::vector<uint8_t>(messageString.begin(), messageString.end());
+                    messageLength = messageString.length();
+                } else {
+                    auto messageArrayBuffer = arguments[messageArgumentPosition].asObject(runtime).getArrayBuffer(runtime);
+                    input = std::vector<uint8_t>(messageArrayBuffer.data(runtime), messageArrayBuffer.data(runtime) + messageArrayBuffer.size(runtime));
+                    messageLength = messageArrayBuffer.size(runtime);
+                }
+
+                result = crypto_hash(hash.data(), input.data(), messageLength);
+                throwOnBadResult(functionName, runtime, result);
+
+                jsi::Object returnHashBufferAsObject = arrayBufferAsObject(runtime, hash);
+                return returnHashBufferAsObject;
+            });
+
+        jsiRuntime.global().setProperty(jsiRuntime, "jsi_crypto_hash", std::move(jsi_crypto_hash));
+
         auto jsi_crypto_kdf_hkdf_sha256_extract = jsi::Function::createFromHostFunction(
             jsiRuntime,
             jsi::PropNameID::forUtf8(jsiRuntime, "jsi_crypto_kdf_hkdf_sha256_extract"),

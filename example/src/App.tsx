@@ -7,6 +7,7 @@ import {
   crypto_sign_seed_keypair,
   crypto_sign_ed25519_sk_to_curve25519,
   crypto_sign_ed25519_pk_to_curve25519,
+  crypto_hash,
 } from '../../src/lib.native';
 
 loadSumoVersion();
@@ -49,6 +50,9 @@ async function generateAsymmetricKey(iv = generateEntropy(32)) {
   const uint8_encSK = crypto_sign_ed25519_sk_to_curve25519(uint8_privKey);
   console.log('uint8_encPK=', uint8_encPK);
   console.log('uint8_encSK=', uint8_encSK);
+
+  const hashedValue = crypto_hash('hello world');
+  console.log('hello world hashed value: ', hashedValue);
   // console.log("crypto_sign_ed25519_pk_to_curve25519", crypto_sign_ed25519_pk_to_curve25519(new Un));
 
   return Promise.resolve({
